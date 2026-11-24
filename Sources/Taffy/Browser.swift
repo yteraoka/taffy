@@ -67,7 +67,8 @@ struct Browser: Hashable, Sendable {
 }
 
 /// Audio / capture state of a tab, read from the browser's tab strip through
-/// the Accessibility API (see MediaScanner).
+/// the Accessibility API (see MediaScanner) and inferred from what macOS
+/// reports about the browser's audio and the cameras (see CaptureInference).
 struct MediaState: OptionSet, Hashable, Sendable {
     let rawValue: Int
 
