@@ -106,4 +106,66 @@ final class CaptureInferenceTests: XCTestCase {
         let result = CaptureInference.apply([.camera, .microphone], to: tabs)
         XCTAssertEqual(result[0].media, [.audio, .microphone])
     }
+
+    func testOtherAppUsingMicrophoneIsIgnoredWhenAppAudioIsKnown() {
+        // The browser plays audio but doesn't record: the microphone in use
+        // belongs to another app, so it isn't passed in.
+        let result = CaptureInference.apply([], appAudio: .audio,
+                                            to: [tab("https://meet.google.com/x", .audio)])
+        XCTAssertEqual(result[0].media, .audio)
+    }
+
+    func testWithoutTabStripMeetingTabGetsBrowserAudio() {
+        let tabs = [tab("https://meet.google.com/x", []),
+                    tab("https://www.youtube.com/watch?v=1", [], index: 2)]
+        let result = CaptureInference.apply([.camera, .microphone], appAudio: [.audio, .microphone], to: tabs)
+        XCTAssertEqual(result[0].media, [.audio, .camera, .microphone])
+        XCTAssertEqual(result[1].media, [])
+    }
+
+    func testWithoutTabStripRecordingOnly() {
+        let result = CaptureInference.apply(.microphone, appAudio: .microphone,
+                                            to: [tab("https://meet.google.com/x", [])])
+        XCTAssertEqual(result[0].media, .microphone)
+    }
+
+    func testWithoutTabStripSilentBrowser() {
+        let result = CaptureInference.apply(.camera, appAudio: [],
+                                            to: [tab("https://meet.google.com/x", [])])
+        XCTAssertEqual(result[0].media, [])
+    }
+
+    func testTabStripStatesWinOverBrowserAudio() {
+        // A tab already reports audio, so the browser-wide state isn't spread
+        // to the (silent) meeting tab.
+        let tabs = [tab("https://meet.google.com/x", []),
+                    tab("https://www.youtube.com/watch?v=1", .audio, index: 2)]
+        let result = CaptureInference.apply([], appAudio: .audio, to: tabs)
+        XCTAssertEqual(result[0].media, [])
+        XCTAssertEqual(result[1].media, .audio)
+    }
+}
+
+/// Reads real CoreAudio state, so it only runs when asked:
+/// `TAFFY_LIVE_AUDIO=1 swift test --filter AppAudioLiveTests`.
+final class AppAudioLiveTests: XCTestCase {
+    func testDetectsAProcessPlayingSound() throws {
+        guard ProcessInfo.processInfo.environment["TAFFY_LIVE_AUDIO"] == "1" else {
+            throw XCTSkip("set TAFFY_LIVE_AUDIO=1 to run")
+        }
+        guard #available(macOS 14.2, *) else { throw XCTSkip("needs macOS 14.2") }
+        let player = Process()
+        player.executableURL = URL(fileURLWithPath: "/usr/bin/afplay")
+        player.arguments = ["-v", "0.02", "/System/Library/Sounds/Submarine.aiff"]
+        try player.run()
+        defer { player.terminate() }
+
+        var usage: MediaState?
+        for _ in 0..<20 where usage?.contains(.audio) != true {
+            Thread.sleep(forTimeInterval: 0.05)
+            usage = AppAudio.usage(pid: player.processIdentifier, bundleURL: nil)
+        }
+        XCTAssertEqual(usage, .audio)
+        XCTAssertEqual(AppAudio.usage(pid: ProcessInfo.processInfo.processIdentifier, bundleURL: nil), [])
+    }
 }

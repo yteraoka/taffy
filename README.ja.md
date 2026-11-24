@@ -124,16 +124,23 @@ tccutil reset Accessibility com.github.yteraoka.taffy
 
 Chromium 系のブラウザはタブに状態を 1 つしか出さず、Web 会議中は「音声を再生中」が優先されます。そのため Brave や最近の Chrome では、Google Meet のタブがカメラ / マイク使用中として読み取れません。
 
-そこで Taffy は、Mac のどこかでカメラやマイクが使われているかを macOS に問い合わせます（追加の権限は要りません。デバイスを開くわけではありません）。使われているときは、音声を再生中（またはミュート中）の Web 会議サイトのタブに、カメラ / マイクのアイコンを付けます。対象は Google Meet、Zoom、Microsoft Teams、Webex、Whereby、Jitsi Meet、Amazon Chime です（`Sources/Taffy/CaptureInference.swift` の `meetingHosts`）。
+そこで Taffy は、次のことを macOS に問い合わせます（追加の権限は要りません。デバイスを開くわけではありません）。
 
-推定なので、ほかのアプリ（Zoom アプリなど）がカメラを使っている間に Web 会議のタブが音声を出していると、誤ってアイコンが付きます。マイクと音声出力を兼ねるデバイス（AirPods や USB ヘッドセットなど）では、音声を再生しているだけでもマイク使用中と判定されることがあります。
+- Mac のどこかでカメラが使われているか
+- そのブラウザ自身が音声を出力しているか、マイクから録音しているか（macOS 14.2 以降。ブラウザのヘルパープロセスも含めて、アプリ単位で分かります）
+
+使われているときは、音声を再生中（またはミュート中）の Web 会議サイトのタブに、カメラ / マイクのアイコンを付けます。対象は Google Meet、Zoom、Microsoft Teams、Webex、Whereby、Jitsi Meet、Amazon Chime です（`Sources/Taffy/CaptureInference.swift` の `meetingHosts`）。
+
+アクセシビリティの許可がないなどでタブバーを読めないときも、ブラウザが音声を出力・録音していれば、そのブラウザの Web 会議サイトのタブにスピーカー / マイクのアイコンを付けます。Web 会議サイト以外のタブは、どのタブが音を出しているかまでは分からないため、アイコンは付きません。
+
+推定なので、ほかのアプリ（Zoom アプリなど）がカメラを使っている間に Web 会議のタブが音声を出していると、誤ってカメラのアイコンが付きます。macOS 14.1 以前ではマイクも Mac 全体の状態で判定するため、ほかのアプリがマイクを使っているときや、マイクと音声出力を兼ねるデバイス（AirPods や USB ヘッドセットなど）で音声を再生しているだけのときにも、マイク使用中と判定されることがあります。
 
 ### 制限
 
 - 英語と日本語のブラウザ表示で判定しています。ほかの言語では判定できないことがあります
 - タブバーが見えていないウィンドウ（Safari でタブが 1 つだけのウィンドウなど）や、別の操作スペースにあるウィンドウのタブは判定できません
 - Arc はタブがサイドバーにあるため、今のところ判定できません
-- アイコンが出ないときは `defaults write com.github.yteraoka.taffy mediaDebug -bool true` を設定して Taffy を再起動すると、読み取ったタブの情報が Console.app（`Taffy media` で検索）に出ます
+- アイコンが出ないときは `defaults write com.github.yteraoka.taffy mediaDebug -bool true` を設定して Taffy を再起動すると、読み取ったタブの情報と、macOS から見たブラウザの音声出力 / 録音の状態（`trusted=0` ならアクセシビリティの許可が効いていません）が Console.app（`Taffy media` で検索）に出ます
 
 ## 権限について
 

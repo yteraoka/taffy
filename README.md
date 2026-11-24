@@ -124,16 +124,23 @@ tccutil reset Accessibility com.github.yteraoka.taffy
 
 Chromium-based browsers show only one state per tab, and during a web meeting "playing audio" wins. So in Brave and recent Chrome, a Google Meet tab can't be read as using the camera or microphone.
 
-To cover this, Taffy asks macOS whether any app on the Mac is using a camera or microphone (no extra permission is needed, and the devices aren't opened). If one is, tabs on web meeting sites that are playing (or have muted) audio get the camera / microphone icon. Supported sites: Google Meet, Zoom, Microsoft Teams, Webex, Whereby, Jitsi Meet, and Amazon Chime (`meetingHosts` in `Sources/Taffy/CaptureInference.swift`).
+To cover this, Taffy asks macOS the following (no extra permission is needed, and the devices aren't opened):
 
-This is a guess: if another app (such as the Zoom app) uses the camera while a meeting tab plays audio, the tab gets the icon too. With devices that combine a microphone and speaker (AirPods, USB headsets), just playing audio may count as the microphone being in use.
+- Whether any app on the Mac is using a camera
+- Whether the browser itself is playing audio or recording from a microphone (macOS 14.2 or later; this covers the browser and its helper processes, per app)
+
+If so, tabs on web meeting sites that are playing (or have muted) audio get the camera / microphone icon. Supported sites: Google Meet, Zoom, Microsoft Teams, Webex, Whereby, Jitsi Meet, and Amazon Chime (`meetingHosts` in `Sources/Taffy/CaptureInference.swift`).
+
+Even when the tab bar can't be read (for example without the Accessibility permission), web meeting tabs of a browser that is playing or recording audio get the speaker / microphone icon. Other tabs get no icon in that case, since macOS doesn't tell which tab is making the sound.
+
+This is a guess: if another app (such as the Zoom app) uses the camera while a meeting tab plays audio, the tab gets the camera icon too. On macOS 14.1 and earlier the microphone is also judged Mac-wide, so another app using a microphone, or just playing audio through a device that combines a microphone and speaker (AirPods, USB headsets), may count as the microphone being in use.
 
 ### Limitations
 
 - Detection works with browsers displayed in English or Japanese. Other languages may not be detected
 - Tabs in windows whose tab bar isn't visible (such as a Safari window with only one tab) or in windows on another Space can't be detected
 - Arc keeps its tabs in the sidebar, so it isn't supported for now
-- If icons don't appear, run `defaults write com.github.yteraoka.taffy mediaDebug -bool true` and restart Taffy; the tab information it reads is logged to Console.app (search for `Taffy media`)
+- If icons don't appear, run `defaults write com.github.yteraoka.taffy mediaDebug -bool true` and restart Taffy; the tab information it reads and the browser's audio output / recording state as macOS sees it (`trusted=0` means the Accessibility permission isn't in effect) are logged to Console.app (search for `Taffy media`)
 
 ## Permissions
 

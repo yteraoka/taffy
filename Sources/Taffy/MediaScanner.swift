@@ -27,11 +27,41 @@ enum MediaScanner {
 
     /// Returns `tabs` with `media` filled in, for tabs that could be matched.
     static func annotate(_ tabs: [TabItem], browser: Browser) -> [TabItem] {
-        guard isTrusted, !tabs.isEmpty,
-              let pid = NSRunningApplication.runningApplications(withBundleIdentifier: browser.bundleID)
-                .first?.processIdentifier
+        guard !tabs.isEmpty,
+              let app = NSRunningApplication.runningApplications(withBundleIdentifier: browser.bundleID).first
         else { return tabs }
+        let pid = app.processIdentifier
 
+        var result = isTrusted ? annotateFromTabStrip(tabs, browser: browser, pid: pid) : tabs
+
+        // What macOS reports: a camera / microphone in use somewhere, and
+        // whether this browser itself is playing or recording audio. When the
+        // latter is known, it replaces "some microphone is in use", which also
+        // fires for other apps and for headsets that only play sound.
+        let appAudio = AppAudio.usage(pid: pid, bundleURL: app.bundleURL)
+        let devices = CaptureDevices.inUse()
+        var inUse = devices
+        if let appAudio {
+            inUse.remove(.microphone)
+            inUse.formUnion(appAudio.intersection(.microphone))
+        }
+        if debug {
+            NSLog("Taffy media: %@ trusted=%d devices in use: camera=%d microphone=%d; app audio: %@",
+                  browser.name, isTrusted ? 1 : 0,
+                  devices.contains(.camera) ? 1 : 0, devices.contains(.microphone) ? 1 : 0,
+                  appAudio.map { "output=\($0.contains(.audio) ? 1 : 0) input=\($0.contains(.microphone) ? 1 : 0)" }
+                      ?? "unavailable (needs macOS 14.2)")
+            if #available(macOS 14.2, *) {
+                for line in AppAudio.describe(pid: pid, bundleURL: app.bundleURL) {
+                    NSLog("Taffy media: %@ audio process %@", browser.name, line)
+                }
+            }
+        }
+        return CaptureInference.apply(inUse, appAudio: appAudio, to: result)
+    }
+
+    /// Reads each tab's state from the tab strip through the Accessibility API.
+    private static func annotateFromTabStrip(_ tabs: [TabItem], browser: Browser, pid: pid_t) -> [TabItem] {
         let axWindows = scanWindows(pid: pid)
         if debug {
             for (i, window) in axWindows.enumerated() {
@@ -74,13 +104,7 @@ enum MediaScanner {
                 result[tabIndex].media = classify(text)
             }
         }
-
-        let inUse = CaptureDevices.inUse()
-        if debug {
-            NSLog("Taffy media: devices in use: camera=%d microphone=%d",
-                  inUse.contains(.camera) ? 1 : 0, inUse.contains(.microphone) ? 1 : 0)
-        }
-        return CaptureInference.apply(inUse, to: result)
+        return result
     }
 
     // MARK: - Classification
