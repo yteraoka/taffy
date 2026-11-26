@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.4.0](https://github.com/yteraoka/taffy/compare/v0.3.0...v0.4.0) - 2026-11-26
+
+- リリースのビルドを Developer ID で署名し公証する by @yteraoka in https://github.com/yteraoka/taffy/pull/20
+
 ## [v0.3.0](https://github.com/yteraoka/taffy/compare/v0.2.1...v0.3.0) - 2026-11-24
 
 - アップグレード後にアクセシビリティの許可をリセットする方法を README に追記 by @yteraoka in https://github.com/yteraoka/taffy/pull/17
