@@ -22,13 +22,32 @@ jobs:
       - name: Test
         run: swift test
 
-      # ad-hoc 署名のユニバーサルな zip を作る（Homebrew の cask で配布するため、公証は不要）
+      # Developer ID Application の証明書と公証用の App Store Connect API キーを一時的なキーチェーンに入れ、
+      # 次のステップの scripts/release.sh に公証に使うプロファイルとキーチェーンを渡す
+      - name: Import signing certificate
+        env:
+          P12: ${{ secrets.MACOS_CERT_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }} # p12 にパスワードを付けていなければ未設定（空文字）でよい
+          NOTARY_KEY: ${{ secrets.NOTARY_KEY_BASE64 }}
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
+          TAFFY_NOTARIZE: "1"
+        run: scripts/import-certificate.sh
+
+      # Developer ID で署名・公証し、公証のチケットを staple したユニバーサルな zip を作る
       - name: Build release zip
         id: build
+        env:
+          CODESIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY || '-' }}
         run: |
           version="$(sed -n 's/.*current = "\(.*\)"/\1/p' Sources/Taffy/Version.swift)"
           if [[ "${GITHUB_REF}" == refs/tags/* && "v${version}" != "${GITHUB_REF_NAME}" ]]; then
             echo "::error::タグ ${GITHUB_REF_NAME} と Version.swift の ${version} が一致しません"
+            exit 1
+          fi
+          # ad-hoc 署名や未公証のまま公開しないようにする
+          if [[ "${CODESIGN_IDENTITY}" == "-" || -z "${TAFFY_NOTARY_PROFILE:-}" ]]; then
+            echo "::error::リリースには Developer ID での署名と公証が必要です（シークレットを確認してください）"
             exit 1
           fi
           echo "version=${version}" >> "${GITHUB_OUTPUT}"

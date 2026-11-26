@@ -18,7 +18,7 @@ make install   # /Applications にコピー
 
 ### 署名
 
-アドホック署名のため、再ビルドのたびに macOS が別アプリとみなし、オートメーションの許可を求められ直すことがあります。気になる場合は手元の署名 ID を指定してビルドしてください。
+手元のビルドは Hardened Runtime を有効にしたアドホック署名（`Resources/Taffy.entitlements` の entitlement 付き）のため、再ビルドのたびに macOS が別アプリとみなし、オートメーションの許可を求められ直すことがあります。気になる場合は手元の署名 ID を指定してビルドしてください。
 
 ```sh
 CODESIGN_IDENTITY="Apple Development: Your Name (XXXXXXXXXX)" make app
@@ -46,6 +46,6 @@ CODESIGN_IDENTITY="Apple Development: Your Name (XXXXXXXXXX)" make app
 | ジョブ | 内容 |
 | --- | --- |
 | `test` | `swift test`（検索のスコア、`@` フィルタ、音声 / カメラ状態の判定と Web 会議タブの推定、Claude Code の判定、ホットキーの解析、AppleScript の生成とコンパイル） |
-| `build` | リリースと同じ手順でユニバーサルな `.app` の zip を作り、cask の構文を確認して、zip を Artifacts に上げる |
+| `build` | リリースと同じ手順でユニバーサルな `.app` の zip を作り（Developer ID で署名するが公証はしない）、cask の構文を確認して、zip を Artifacts に上げる |
 
 Actions タブから手動で実行することもできます。

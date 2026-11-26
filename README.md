@@ -26,7 +26,7 @@ brew install --cask yteraoka/cask/taffy
 ```
 
 - Installs the prebuilt universal build (Apple Silicon / Intel, macOS 13 or later) from GitHub Releases into `/Applications/Taffy.app`
-- The app is ad-hoc signed and not notarized, so the cask removes the quarantine attribute on install
+- The app is signed with Developer ID and notarized
 
 To uninstall, run `brew uninstall --cask yteraoka/cask/taffy` (add `--zap` to remove settings too).
 
@@ -114,7 +114,7 @@ Browsers don't expose this state via AppleScript, so Taffy reads the tab bar thr
 
 Choose "Enable audio/camera indicators…" at the bottom of the panel or "Audio & Camera Indicators…" in the menu bar menu to open the Accessibility pane of System Settings, then turn on Taffy. Without this permission, searching and switching tabs still works as usual.
 
-Because the app is ad-hoc signed, macOS treats each Homebrew upgrade or rebuild as a different app, and the old permission stops applying. System Settings may still show Taffy as on, but turning it off and on again doesn't help. If icons stop appearing even though the permission looks on, quit Taffy, remove Taffy from the list with "−" (or run the command below), then start Taffy and allow it again:
+Up to v0.3.0 the app was ad-hoc signed, so macOS treats the upgrade from those versions (or a local rebuild) as a different app, and the old permission stops applying. System Settings may still show Taffy as on, but turning it off and on again doesn't help. If icons stop appearing even though the permission looks on, quit Taffy, remove Taffy from the list with "−" (or run the command below), then start Taffy and allow it again:
 
 ```sh
 tccutil reset Accessibility com.github.yteraoka.taffy
@@ -148,7 +148,7 @@ The first time Taffy fetches tabs, macOS asks for each browser or terminal, e.g.
 
 If you denied it, or the panel shows `not allowed to control this app` at the bottom, turn on the relevant app for Taffy under System Settings > Privacy & Security > Automation.
 
-Because the app is ad-hoc signed, macOS may treat it as a different app after each Homebrew upgrade and ask for permission again. If the permission state gets confused, reset it with:
+Up to v0.3.0 the app was ad-hoc signed, so macOS may ask for permission again after upgrading from those versions. If the permission state gets confused, reset it with:
 
 ```sh
 tccutil reset AppleEvents com.github.yteraoka.taffy

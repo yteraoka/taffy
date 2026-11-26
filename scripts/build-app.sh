@@ -3,7 +3,7 @@
 #
 #   CONFIG=debug|release   build configuration (default: release)
 #   UNIVERSAL=1            build an arm64 + x86_64 binary (needs full Xcode)
-#   CODESIGN_IDENTITY=...  signing identity (default: "-", ad-hoc)
+#   CODESIGN_IDENTITY=...  signing identity (default: "-", ad-hoc). Always signed with Hardened Runtime
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -26,7 +26,11 @@ cp Resources/Info.plist "$APP/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$APP/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" "$APP/Contents/Info.plist"
 
-codesign --force --sign "${CODESIGN_IDENTITY:--}" "$APP"
+# 公証に必要な Hardened Runtime を有効にする（ad-hoc 署名でも同じ entitlement で動作を揃える）
+IDENTITY="${CODESIGN_IDENTITY:--}"
+SIGN_FLAGS=(--force --options runtime --entitlements Resources/Taffy.entitlements --sign "$IDENTITY")
+[[ "$IDENTITY" != "-" ]] && SIGN_FLAGS+=(--timestamp)
+codesign "${SIGN_FLAGS[@]}" "$APP"
 codesign --verify --strict --verbose=2 "$APP"
 
 echo "Built $APP ($VERSION)"
