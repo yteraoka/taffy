@@ -176,7 +176,7 @@ defaults delete com.github.yteraoka.taffy hotkey
 ## Development
 
 - [Developer guide](docs/development.md) (build, internals, adding browsers, CI) — Japanese
-- [Release process](docs/release.md) — Japanese
+- [Release process](docs/release.md) (release flow, local release build, Developer ID certificate and notarization API key) — Japanese
 
 ## License
 

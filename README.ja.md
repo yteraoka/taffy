@@ -176,7 +176,7 @@ defaults delete com.github.yteraoka.taffy hotkey
 ## 開発
 
 - [開発者向け情報](docs/development.md)（ビルド、しくみ、ブラウザの追加、CI）
-- [リリースの流れ](docs/release.md)
+- [リリースの流れ](docs/release.md)（リリースの流れ、手元でのリリースビルド、Developer ID の証明書と公証用の API キー）
 
 ## ライセンス
 
