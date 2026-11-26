@@ -17,13 +17,6 @@ cask "taffy" do
 
   app "Taffy.app"
 
-  # ad-hoc 署名で公証していないため、quarantine 属性を外して Gatekeeper に止められないようにする
-  postflight_steps do
-    run "/usr/bin/xattr",
-        args:         ["-dr", "com.apple.quarantine", "{{appdir}}/Taffy.app"],
-        must_succeed: false
-  end
-
   uninstall quit: "com.github.yteraoka.taffy"
 
   zap trash: "~/Library/Preferences/com.github.yteraoka.taffy.plist"

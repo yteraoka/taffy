@@ -33,9 +33,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # リリースと同じ手順で、ad-hoc 署名のユニバーサルな zip を作る
+      # Developer ID Application の証明書と公証用の App Store Connect API キーを一時的なキーチェーンに入れる。
+      # シークレットを参照できない PR（fork からの PR など）では何もせず、次のステップで ad-hoc 署名にする
+      - name: Import signing certificate
+        env:
+          P12: ${{ secrets.MACOS_CERT_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }} # p12 にパスワードを付けていなければ未設定（空文字）でよい
+          NOTARY_KEY: ${{ secrets.NOTARY_KEY_BASE64 }}
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
+        run: scripts/import-certificate.sh
+
+      # リリースと同じ手順でユニバーサルな zip を作る。公証は時間がかかるためタグのとき（release.yaml）だけ行い、
+      # ここでは Developer ID での署名までにする（シークレットを参照できない PR では ad-hoc 署名）
       - name: Build release zip
         id: build
+        env:
+          CODESIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY || '-' }}
         run: |
           version="$(sed -n 's/.*current = "\(.*\)"/\1/p' Sources/Taffy/Version.swift)"
           echo "version=${version}" >> "${GITHUB_OUTPUT}"

@@ -26,7 +26,7 @@ brew install --cask yteraoka/cask/taffy
 ```
 
 - ビルド済みのユニバーサル版（Apple Silicon / Intel、macOS 13 以降）を GitHub Releases から `/Applications/Taffy.app` に入れます
-- アプリは ad-hoc 署名で公証していないため、cask のインストール時に quarantine 属性を外しています
+- アプリは Developer ID で署名し、公証しています
 
 アンインストールは `brew uninstall --cask yteraoka/cask/taffy`（設定も消すなら `--zap`）です。
 
@@ -114,7 +114,7 @@ defaults write com.github.yteraoka.taffy terminalHotkey "ctrl+shift+space"
 
 パネル下部の「Enable audio/camera indicators…」か、メニューバーの「Audio & Camera Indicators…」を選ぶと、システム設定のアクセシビリティの画面が開くので、Taffy をオンにしてください。許可しなくても、タブの検索と切り替えはこれまでどおり使えます。
 
-アドホック署名のため、Homebrew でのアップグレードやビルドし直しのたびに macOS が別アプリとみなし、前の許可が効かなくなります。システム設定では Taffy がオンのまま表示されていても、オフ→オンでは直りません。許可しているのにアイコンが出なくなったときは、Taffy を終了し、一覧から Taffy を「−」で削除（または次のコマンドを実行）してから、Taffy を起動して許可し直してください。
+v0.3.0 までは ad-hoc 署名だったため、それらのバージョンからのアップグレード（や手元でのビルドし直し）では macOS が別アプリとみなし、前の許可が効かなくなります。システム設定では Taffy がオンのまま表示されていても、オフ→オンでは直りません。許可しているのにアイコンが出なくなったときは、Taffy を終了し、一覧から Taffy を「−」で削除（または次のコマンドを実行）してから、Taffy を起動して許可し直してください。
 
 ```sh
 tccutil reset Accessibility com.github.yteraoka.taffy
@@ -148,7 +148,7 @@ Chromium 系のブラウザはタブに状態を 1 つしか出さず、Web 会�
 
 拒否してしまった場合や、パネル下部に `not allowed to control this app` と表示される場合は「システム設定 > プライバシーとセキュリティ > オートメーション」で Taffy の該当アプリをオンにしてください。
 
-アドホック署名のため、Homebrew でのアップグレードのたびに macOS が別アプリとみなし、許可を求められ直すことがあります。許可の状態がおかしくなったときは次のコマンドでリセットできます。
+v0.3.0 までは ad-hoc 署名だったため、それらのバージョンからのアップグレードでは macOS が別アプリとみなし、許可を求められ直すことがあります。許可の状態がおかしくなったときは次のコマンドでリセットできます。
 
 ```sh
 tccutil reset AppleEvents com.github.yteraoka.taffy
@@ -176,7 +176,7 @@ defaults delete com.github.yteraoka.taffy hotkey
 ## 開発
 
 - [開発者向け情報](docs/development.md)（ビルド、しくみ、ブラウザの追加、CI）
-- [リリースの流れ](docs/release.md)
+- [リリースの流れ](docs/release.md)（リリースの流れ、手元でのリリースビルド、Developer ID の証明書と公証用の API キー）
 
 ## ライセンス
 
